@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+recursive-include wagtail_skynetaccessibility_scanner/static *
+recursive-include wagtail_skynetaccessibility_scanner/templates *
+recursive-include wagtail_skynetaccessibility_scanner/migrations *
