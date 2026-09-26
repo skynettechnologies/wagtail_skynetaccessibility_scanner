@@ -9,32 +9,7 @@
 {% endblock %}
 
 {% block content %}
-
- 
-{# ── Custom header: logo inline with title ────────────────────────────── #}
-<header style="
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 20px 14px 20px;
-  border-bottom: 2px solid #e8e0f5;
-  margin-bottom: 8px;
-">
-  <img
-    src="{% static 'wagtail_skynetaccessibility_scanner/img/assets/logo.png' %}"
-    alt="SkynetAccessibility Logo"
-    style="height: 42px; width: auto; display: block; flex-shrink: 0;"
-  />
-  <h1 style="
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #420083;
-    margin: 0;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-  ">SkynetAccessibility Scanner</h1>
-</header>
+{% include "wagtailadmin/shared/header.html" with title="SkynetAccessibility Scanner" icon="skynet-scanner" %}
 
 <div class="nice-padding">
 
@@ -44,7 +19,7 @@
     <div id="skynetLoading" class="skynet-loading-overlay">
       <img src="{% static 'wagtail_skynetaccessibility_scanner/img/assets/loader.gif' %}"
            alt="Loading..." style="width:64px;height:64px;"/>
-      <p style="margin-top:12px;color:#420083;font-weight:500;">Loading accessibility data...</p>
+      <p class="skynet-loading-text">Loading accessibility data...</p>
     </div>
 
     <div id="skynetErrorBanner" class="skynet-error-banner" style="display:none;">

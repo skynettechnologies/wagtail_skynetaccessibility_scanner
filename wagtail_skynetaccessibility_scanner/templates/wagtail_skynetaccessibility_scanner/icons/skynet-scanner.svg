@@ -1,0 +1,18 @@
+<svg id="icon-skynet-scanner" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Skynet Accessibility Scanner: magnifier + accessibility figure + score bars.
+       Drawn in currentColor so it follows Wagtail's light/dark menu and header colours. -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round">
+    <circle cx="299" cy="151" r="118" stroke-width="26"/>
+    <path d="M187 256 102 341" stroke-width="42"/>
+    <path d="M224 127H348" stroke-width="22"/>
+    <path d="M272 186 259 226M300 186 313 226" stroke-width="22"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="286" cy="95" r="24"/>
+    <path d="M262 118h48l-6 76h-36z"/>
+    <rect x="73" y="415" width="50" height="80" rx="4"/>
+    <rect x="173" y="328" width="50" height="167" rx="4"/>
+    <rect x="273" y="366" width="50" height="129" rx="4"/>
+    <rect x="373" y="316" width="50" height="179" rx="4"/>
+  </g>
+</svg>

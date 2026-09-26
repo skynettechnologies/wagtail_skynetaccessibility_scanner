@@ -12,10 +12,17 @@ def register_scanner_urls():
     ]
 
 
+@hooks.register('register_icons')
+def register_scanner_icons(icons):
+    # Adds the Skynet logo to Wagtail's icon sprite as "skynet-scanner".
+    return icons + ['wagtail_skynetaccessibility_scanner/icons/skynet-scanner.svg']
+
+
 @hooks.register('register_admin_menu_item')
 def register_scanner_menu_item():
     return MenuItem(
         'SkynetAccessibility Scanner',
         reverse_lazy('wagtail_skynetaccessibility_scanner:dashboard'),
+        icon_name='skynet-scanner',
         order=10000,
     )

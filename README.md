@@ -4,7 +4,7 @@
 
 SkynetAccessibility Scanner is a powerful Wagtail accessibility testing and scanning module designed to help organizations identify, monitor, and fix accessibility issues across their websites. It enables businesses, agencies, and government organizations to maintain compliance with global accessibility standards while improving user experience for all visitors.
 
-Built for Wagtail 4.0 and above (Python 3.10+, Django 4.0–6.x), this module provides automated scanning, detailed reporting, and continuous monitoring - making accessibility management simple and scalable.
+Built for Wagtail, this module provides automated scanning, detailed reporting, and continuous monitoring - making accessibility management simple and scalable.
 
 [**Start 10-Days Free Trial!**](https://skynetaccessibilityscan.com/trial-subscription)
 
@@ -58,7 +58,7 @@ It acts as both an accessibility checker and compliance testing tool, helping te
 - Supports legal and compliance requirements
 - Scales across multiple Wagtail websites and projects
 
-Explore the full capabilities of the accessibility monitoring Wagtail module. Flexible plans allow to evaluate website accessibility requirements.
+Explore the full capabilities of the accessibility monitoring Wagtail module. Flexible plans allow you to evaluate website accessibility requirements.
 
 ### Pricing
 
@@ -66,7 +66,7 @@ Explore the full capabilities of the accessibility monitoring Wagtail module. Fl
 
 #### Single Site
 
-- Small Site (Up to 25 pages): $9 Per Month
+- Small Site (Up to 25 pages): $9 per month
 - Medium Site (Up to 250 pages): $19 per month
 - Large Site (Up to 1000 pages): $89 per month
 - Extra Large Site (Up to 2500 pages): $199 per month
@@ -94,62 +94,24 @@ Explore the full capabilities of the accessibility monitoring Wagtail module. Fl
 
 - Visit [WCAG Accessibility Scanning and Monitoring](https://www.skynettechnologies.com/accessibility-scanning-and-monitoring)
 - Request a demo or [sign up for a free trial](https://skynetaccessibilityscan.com/trial-subscription) to explore accessibility scanning features.
-- Configure website domains and customize accessibility scan settings.
-- Start monitoring WCAG compliance, track accessibility issues, and download detailed audit report.
-
-## Installation
+- Configure your website domain from the scanner dashboard.
+- Start monitoring WCAG compliance, track accessibility issues, and download detailed audit reports.
 
 ### Prerequisites
 
-- **Python Version:** 3.10 or higher
-- **Django Version:** 4.0 – 6.x
-- **Wagtail Version:** 4.0 or higher
+- **Python:** 3.10 or higher
+- **Django:** 4.0 or higher
+- **Wagtail:** 4.0 or higher
 
-### Compatibility
+## Installation
 
-#### Version Support
-
-![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
-![Django](https://img.shields.io/badge/django-4.0%20%7C%204.1%20%7C%204.2%20%7C%205.0%20%7C%205.1%20%7C%205.2-blue)
-![Wagtail](https://img.shields.io/badge/wagtail-4.x%20%7C%205.x%20%7C%206.x-blue)
-
-### Steps
-
-To install the plugin, follow these instructions.
-
-## Using pip (Recommended)
-
-### Requirements
-
-Must have Python and pip installed, and your Wagtail project set up.
-
-1. Open your terminal and go to your Wagtail project:
-
-   ```bash
-   cd /path/to/project
-   ```
-
-2. Activate your Python virtual environment:
-
-   **On Linux / macOS:**
-   ```bash
-   source venv/bin/activate
-   ```
-
-   **On Windows:**
-   ```bash
-   venv\Scripts\activate
-   ```
-
-   > You should see your terminal prompt change to show the virtual environment name (e.g. `(venv)`). All pip commands must be run inside this activated environment so Wagtail can find the installed package.
-
-3. Install the plugin using pip:
+1. Install the plugin:
 
    ```bash
    pip install wagtail_skynetaccessibility_scanner
    ```
 
-4. Add to `INSTALLED_APPS` in your `settings.py`:
+2. Add it to `INSTALLED_APPS` in `settings.py`:
 
    ```python
    INSTALLED_APPS = [
@@ -158,104 +120,31 @@ Must have Python and pip installed, and your Wagtail project set up.
    ]
    ```
 
-5. Add the context processor to `TEMPLATES` in your `settings.py`:
-
-   ```python
-   TEMPLATES = [
-       {
-           # ...
-           'OPTIONS': {
-               'context_processors': [
-                   # ... your existing context processors ...
-                   'wagtail_skynetaccessibility_scanner.context_processors.skynet_scanner',
-               ],
-           },
-       },
-   ]
-   ```
-
-   > This context processor makes your site's domain URL available to the scanner's templates. It is required for the scanner dashboard to function correctly.
-
-6. Add to `urls.py`:
-
-   ```python
-   from django.urls import path, include
-
-   urlpatterns = [
-       # ... your existing URLs ...
-       path('skynet/', include('wagtail_skynetaccessibility_scanner.urls',
-                                namespace='wagtail_skynetaccessibility_scanner')),
-   ]
-   ```
-
-7. Run migrations:
+3. Run migrations:
 
    ```bash
    python manage.py migrate
    ```
 
-8. Collect static files:
+That's it. Once migrations complete, a default settings record is created automatically and **SkynetAccessibility Scanner** appears in the Wagtail Admin sidebar — no manual configuration needed to get started.
 
-   ```bash
-   python manage.py collectstatic
-   ```
+> **No URL or template configuration needed.** The module registers its own admin page automatically through Wagtail's hook system as soon as it's in `INSTALLED_APPS` — do **not** add a route for it in your project's `urls.py`. Adding one manually creates a duplicate, unauthenticated copy of the dashboard outside Wagtail's admin login wall and can break the sidebar link. Likewise, no `context_processors` entry is required.
 
-9. Restart your server:
+**To deactivate:** remove `'wagtail_skynetaccessibility_scanner'` from `INSTALLED_APPS` and re-run `python manage.py migrate`.
 
-   ```bash
-   python manage.py runserver
-   ```
+## Configuration
 
-10. In the Wagtail Admin, go to **SkynetAccessibility Scanner** in the left sidebar menu.
-
-## Using Download ZIP
-
-1. Download the `.whl` or ZIP file from the repository.
-
-2. Activate your Python virtual environment:
-
-   **On Linux / macOS:**
-   ```bash
-   source venv/bin/activate
-   ```
-
-   **On Windows:**
-   ```bash
-   venv\Scripts\activate
-   ```
-
-3. Install from the `.whl` file:
-
-   ```bash
-   pip install wagtail_skynetaccessibility_scanner-1.0.1-py3-none-any.whl
-   ```
-
-4. Follow steps 4–10 from the pip installation above to complete setup.
-
-## Activation and Deactivation
-
-**To activate:** Follow the installation steps above. After running migrations, a default settings record is created automatically — no manual configuration is needed to get started.
-
-**To deactivate:**
-
-1. Remove `'wagtail_skynetaccessibility_scanner'` from `INSTALLED_APPS` in `settings.py`.
-2. Remove the context processor entry from `TEMPLATES` in `settings.py`.
-3. Remove the `skynet/` URL entry from `urls.py`.
-4. Re-run migrations:
-
-   ```bash
-   python manage.py migrate
-   ```
+After installation, open the Wagtail Admin sidebar and select **SkynetAccessibility Scanner** to set up your domain and scan preferences from the dashboard.
 
 ## CORS Policy Configuration
 
-To avoid CORS policy issues, ensure the following domain is allowed in your server's CORS configuration or trusted origins list.
+To avoid CORS policy issues, ensure the following URL is allowed in your website's CORS configuration or trusted domains list.
 
-| **Domain**                            | **Description**                           | **Usage**                |
-|---------------------------------------|-------------------------------------------|--------------------------|
-| `https://skynetaccessibilityscan.com` | Skynet Accessibility Scan (Global Domain) | API access and resources |
+| **Domain**                            | **Description**                           | **Usage**                 |
+|----------------------------------------|--------------------------------------------|----------------------------|
+| `https://skynetaccessibilityscan.com`  | Skynet Accessibility Scan (Global Domain)  | API access and resources  |
 
-If you are using [`django-cors-headers`](https://pypi.org/project/django-cors-headers/), add the following to `settings.py`:
+If you use [`django-cors-headers`](https://pypi.org/project/django-cors-headers/), add:
 
 ```python
 CORS_ALLOWED_ORIGINS = [
@@ -264,12 +153,17 @@ CORS_ALLOWED_ORIGINS = [
 ]
 ```
 
-**Additional instructions:**
+### Instructions
 
-1. Update your server's CORS configuration to include the domain above.
+1. Update your server's CORS configuration to include this domain.
 2. Ensure wildcard subdomains (`*`) are supported where necessary.
-3. Verify the application functionality by testing requests to these domains.
+3. Verify the application functionality by testing requests to this domain.
 4. If issues persist, consult the documentation for CORS configuration guidance.
+
+## Known Issues / Before You Deploy
+
+- **Static asset paths on non-default storage:** the scanner's plan-tier icons are served from a hardcoded `/static/...` path and can fail to load (404) on sites that serve static files from S3, a CDN, or any `STATIC_URL` other than Django's default `/static/`. If your icons don't appear, check your browser console for 404s on `img/assets/*.svg` and verify your static file routing.
+- Do not manually add a `urls.py` route or a `TEMPLATES` context processor entry for this app — see the note under Installation above.
 
 ## Screenshots
 
@@ -288,7 +182,7 @@ Please visit our **[support page](https://www.skynettechnologies.com/report-acce
 
 ## Send Us an Email
 
-Alternatively, you can send an email to our support team:  
+Alternatively, you can send an email to our support team:
 **[hello@skynettechnologies.com](mailto:hello@skynettechnologies.com)**
 
 ## Accessibility Partnership Opportunities

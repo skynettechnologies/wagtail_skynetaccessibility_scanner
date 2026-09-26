@@ -6,5 +6,4 @@ app_name = 'wagtail_skynetaccessibility_scanner'
 
 urlpatterns = [
     path('', views.scanner_dashboard, name='dashboard'),
-    path('user-info/', views.user_info, name='user_info'),
 ]

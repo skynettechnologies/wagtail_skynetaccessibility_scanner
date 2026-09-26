@@ -16,20 +16,6 @@
     const ACTION_LINK_API   = `${SKYNET_BASE_URL}/api/generate-plan-action-link`;
     const PLATFORM          = 'wagtail';
 
-    /* ── Wagtail-local user-info endpoint ───────────────────────────── */
-    /* Resolves relative to the Wagtail admin prefix so it works whether  */
-    /* the admin is mounted at /admin/ or any custom path.                */
-    const WAGTAIL_USER_INFO_API = (function () {
-        /* Walk up from the current page URL to find the scanner root.
-         * The dashboard is always at:  <admin_prefix>/skynet-scanner/
-         * The user-info endpoint is at: <admin_prefix>/skynet-scanner/user-info/
-         * window.location.pathname will be something like:
-         *   /admin/skynet-scanner/
-         * So we can derive the user-info path from it reliably.         */
-        const pathname = window.location.pathname.replace(/\/?$/, '/');
-        return pathname + 'user-info/';
-    }());
-
     /* ── Static asset paths ──────────────────────────────────────────── */
     const _root = document.getElementById('skynetAppRoot');
     const _staticBase = _root ? _root.dataset.staticBase || '' : '';
@@ -153,21 +139,8 @@
     function _skynetHandleEmailToggle() {
         const wrapper = document.getElementById('skynetEmailToggleWrapper');
         if (!wrapper) return;
-
-        /* If the Wagtail user endpoint already confirmed a real email,     */
-        /* hide the toggle immediately — no string-check needed.            */
-        if (appData.wagtailHasRealEmail === true) {
-            wrapper.style.display = 'none';
-            return;
-        }
-
-        /* Fallback: check the email value fetched from either the Wagtail  */
-        /* user endpoint or the external get-scan-detail userData block.     */
-        /* Show the toggle only when the email is absent or a no-reply       */
-        /* placeholder (meaning the domain was auto-registered without a     */
-        /* real admin email).                                                 */
-        const email      = appData.userDataEmail || '';
-        const isFallback = !email || email.toLowerCase().startsWith('no-reply@');
+        const email = appData.userDataEmail || '';
+        const isFallback = !email || email.startsWith('no-reply@');
         wrapper.style.display = isFallback ? 'block' : 'none';
     }
 
@@ -290,107 +263,14 @@
         }
     };
 
-    /* ── Fetch logged-in Wagtail user info from the local endpoint ───── */
-    /* Called first in initSkynetScanner so that appData.userDataEmail is  */
-    /* seeded from the Wagtail auth system before _skynetHandleEmailToggle  */
-    /* runs.  This is the source of truth for whether the admin has a real  */
-    /* email:                                                                */
-    /*   • has_real_email === true  → hide toggle (real email on file)      */
-    /*   • has_real_email === false → show toggle (no-reply / empty email)  */
-    /*                                                                       */
-    /* On failure (network error, non-JSON, etc.) we leave appData fields   */
-    /* untouched and let fetchScanDetail / _skynetHandleEmailToggle fall     */
-    /* back to the external-API userData block as before.                   */
-    async function fetchWagtailUser() {
-        try {
-            const resp = await fetch(WAGTAIL_USER_INFO_API, {
-                method:      'GET',
-                credentials: 'same-origin',   /* send session cookie */
-                headers:     { 'X-Requested-With': 'XMLHttpRequest' },
-            });
-            if (!resp.ok) {
-                console.warn('[Skynet] fetchWagtailUser: HTTP', resp.status);
-                return;
-            }
-            const json = await resp.json();
-
-            /* Seed appData with the Wagtail user's details.              */
-            /* These may be overridden later by fetchScanDetail's userData */
-            /* block — but only if those fields are non-empty, so a real   */
-            /* email fetched here is never silently replaced by a          */
-            /* no-reply placeholder from the external API.                 */
-            if (json.id)    appData.userDataId   = String(json.id);
-            if (json.name)  appData.userDataName  = json.name;
-
-            /* Email: always prefer the Wagtail value when it is a real    */
-            /* address.  If the Wagtail account has no email, keep whatever */
-            /* appData already had (empty string → no-reply logic applies). */
-            const wagtailEmail = (json.email || '').trim();
-            if (wagtailEmail) {
-                appData.userDataEmail = wagtailEmail;
-            }
-
-            /* Expose the convenience flag directly on appData so callers  */
-            /* can skip the string-prefix check if they want.              */
-            appData.wagtailHasRealEmail = json.has_real_email === true;
-
-        } catch (err) {
-            console.warn('[Skynet] fetchWagtailUser failed:', err);
-        }
-    }
-
     /* ── Register domain directly from browser ───────────────────────── */
-    /* ── Push the real admin email to the Skynet API ────────────────── */
-    /* Called after registerDomain when the domain was already registered
-     * with a no-reply placeholder AND the Wagtail user has a real email.
-     * Silently upgrades the stored email on the Skynet side so that
-     * future get-scan-detail calls return the real address.
-     * Failures are soft-logged and never block the UI.                  */
-    async function updateUserEmailOnSkynet(userId, name, email, company, website) {
-        if (!userId || !email || email.toLowerCase().startsWith('no-reply@')) return;
-        try {
-            const form = new FormData();
-            form.append('user_id',      String(userId));
-            form.append('name',         name    || email.split('@')[0]);
-            form.append('email',        email);
-            form.append('comapny_name', company || website || '');  /* API typo kept */
-            form.append('website',      website || '');
-
-            const resp = await fetch(UPDATE_USER_API, { method: 'POST', body: form });
-            if (!resp.ok) { console.warn('[Skynet] updateUserEmailOnSkynet: HTTP', resp.status); return; }
-            const json = await resp.json();
-            if (String(json.status) === '1') {
-                /* Reflect the real email in appData immediately */
-                appData.userDataEmail       = email;
-                appData.userDataName        = name || appData.userDataName;
-                appData.wagtailHasRealEmail = true;
-            } else {
-                console.warn('[Skynet] updateUserEmailOnSkynet: API status', json.status, json);
-            }
-        } catch (err) {
-            console.warn('[Skynet] updateUserEmailOnSkynet failed:', err);
-        }
-    }
-
-    /* ── Register domain directly from browser ───────────────────────── */
-    /* Uses the real Wagtail admin email when available so the Skynet API
-     * stores a genuine address from the very first registration.
-     * Falls back to no-reply@ only when no real email is known yet.
-     * The optional userEmail / userName params are seeded by
-     * fetchWagtailUser() before this function is called.               */
-    async function registerDomain(websiteUrl, domain, userEmail, userName) {
-        /* Use the real email when it looks genuine */
-        const regEmail = (userEmail && !userEmail.toLowerCase().startsWith('no-reply@'))
-            ? userEmail
-            : `no-reply@${domain}`;
-        const regName  = userName || domain;
-
+    async function registerDomain(websiteUrl, domain) {
         const form = new FormData();
         form.append('website',         b64EncodeUrl(websiteUrl));
         form.append('platform',        PLATFORM);
         form.append('is_trial_period', '1');
-        form.append('name',            regName);
-        form.append('email',           regEmail);
+        form.append('name',            domain);
+        form.append('email',           `no-reply@${domain}`);
         form.append('company_name',    domain);
         form.append('package_type',    '25-pages');
 
@@ -406,10 +286,6 @@
             const apiMsg = json.message || json.error || JSON.stringify(json);
             throw new Error(apiMsg || 'Registration failed. Please try again.');
         }
-
-        /* Tag the response so initSkynetScanner knows whether registration
-         * used the real email or the no-reply placeholder               */
-        json._registeredWithRealEmail = (regEmail === userEmail && !!userEmail);
         return json;
     }
 
@@ -458,21 +334,9 @@
         const ud = json.userData || {};
         appData.userDataId      = ud.id           ? String(ud.id) : appData.userDataId   || '';
         appData.userDataName    = ud.name         || appData.userDataName    || '';
+        appData.userDataEmail   = ud.email        || appData.userDataEmail   || '';
         appData.userDataCompany = ud.company_name || appData.userDataCompany || '';
         appData.userDataWebsite = ud.website      || appData.userDataWebsite || '';
-
-        /* Email: only replace the stored value when the external API provides
-         * a real (non-no-reply) address.  This prevents the auto-generated
-         * "no-reply@<domain>" placeholder — written during registerDomain —
-         * from overwriting a genuine Wagtail admin email that was fetched
-         * earlier by fetchWagtailUser.                                       */
-        const apiEmail = (ud.email || '').trim();
-        if (apiEmail && !apiEmail.toLowerCase().startsWith('no-reply@')) {
-            appData.userDataEmail = apiEmail;
-        } else if (!appData.userDataEmail) {
-            /* Only fill from API if we have nothing else yet */
-            appData.userDataEmail = apiEmail;
-        }
 
         /* Prefer userData.id as authoritative user_id if data.user_id was absent */
         if (!appData.userId && appData.userDataId) appData.userId = appData.userDataId;
@@ -866,7 +730,7 @@
         });
     }
 
-    /* ── renderViolationReport — exact Django logic ──────────────────── */
+    /* ── renderViolationReport ──────────────────────────────────────────── */
     function renderViolationReport() {
         const reportDateEl = document.getElementById('skynetS2ReportDate');
         if (reportDateEl) reportDateEl.textContent = appData.lastScan ? fmtDate(appData.lastScan) : '—';
@@ -949,33 +813,11 @@
         appData.websiteUrl = websiteUrl;
         appData.domain     = domain;
 
-        /* Step 0: fetch the logged-in Wagtail user's info from the local
-         * Django/Wagtail endpoint.  This seeds appData.userDataEmail with
-         * the real admin email (if one exists) BEFORE we call the external
-         * Skynet API, so _skynetHandleEmailToggle() can make the correct
-         * show/hide decision even if the external API hasn't responded yet
-         * or returns a no-reply placeholder.                               */
+        /* Step 1: register domain */
         try {
-            await fetchWagtailUser();
-        } catch (e) {
-            console.warn('[Skynet] fetchWagtailUser failed:', e);
-        }
-
-        /* Step 1: register domain — pass the real Wagtail user email so
-         * the Skynet API stores it from the very first registration.
-         * appData.userDataEmail and appData.userDataName were seeded by
-         * fetchWagtailUser() in Step 0.                                */
-        let registeredWithRealEmail = false;
-        try {
-            const registerJson = await registerDomain(
-                websiteUrl,
-                domain,
-                appData.userDataEmail,   /* real email from Wagtail user  */
-                appData.userDataName     /* real name  from Wagtail user  */
-            );
+            const registerJson = await registerDomain(websiteUrl, domain);
             const rawUid = registerJson.user_id ?? registerJson.data?.user_id ?? registerJson.data?.id ?? '';
             if (rawUid) appData.userId = String(rawUid);
-            registeredWithRealEmail = registerJson._registeredWithRealEmail === true;
         } catch (e) {
             console.warn('[Skynet] registerDomain failed:', e);
         }
@@ -986,26 +828,6 @@
             await fetchScanDetail(websiteUrl);
         } catch (e) {
             console.warn('[Skynet] fetchScanDetail failed:', e);
-        }
-
-        /* Step 2b: if the domain was already registered with a no-reply
-         * placeholder (status 0 from register API, registeredWithRealEmail
-         * false) BUT the Wagtail user has a real email, push it to the
-         * Skynet API now so the server stores the genuine address.
-         * This is the key fix for the scenario shown in the screenshots:
-         *   - Wagtail account: emailtestdemo@gmail.com  (real)
-         *   - Skynet userData: no-reply@domain          (stale placeholder)
-         * After this call, get-scan-detail will return the real email.  */
-        if (!registeredWithRealEmail && appData.wagtailHasRealEmail && appData.userId) {
-            const resolvedCompany = appData.userDataCompany || domain;
-            const resolvedWebsite = appData.userDataWebsite || domain;
-            await updateUserEmailOnSkynet(
-                appData.userId,
-                appData.userDataName,
-                appData.userDataEmail,
-                resolvedCompany,
-                resolvedWebsite
-            );
         }
 
         /* Step 3: fetchScanCount — MUST run after fetchScanDetail so that
